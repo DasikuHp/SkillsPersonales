@@ -10,7 +10,11 @@ Ancla de resumibilidad: si la sesión se agota, retoma desde aquí.
       10-altitude, 20-iteration, 30-debug-loop, 40-check-first, 60-skills-first).
 - [x] **F2 · Debug-loop** — comando `/debug-loop` (hooks ya implementados en F0). Verificado: ronda 15 emite
       aviso; test verde + `stop.mjs` resetea el contador a 0.
-- [ ] **F3 · Skills EGO + agentes** — ego-* ligeras nativas + 6 agentes + comandos.
+- [x] **F3 · Skills EGO + agentes** — 8 skills EGO **portadas fielmente** desde `E:\skill\ego` (line-count
+      exacto a la fuente) con `_SOURCE.md` de procedencia; 6 agentes (debate-devil/angel/judge, code-reviewer,
+      appsec-red/blue con invariante inward-only explícito y no-evasión del hook); 5 comandos (/ego-status,
+      /ego-facet, /ego-debate→devil→angel→judge, /ego-remember, /ego-evolve). Vía workflow multi-agente (19
+      agentes, tiering haiku/sonnet-5/fable-5), 0 errores.
 - [ ] **F4 · Harness comprobar-primero** — `ensure.mjs` estándar + sentinels + `.mcp.json` + `/ensure-engine`.
 - [ ] **F5 · Motores completos** — codebase-memory (C), video-production, godot-rpg, appsec-inward + stubs SEAL/SAT.
 - [ ] **F6 · pxpipe** — gating por modelo ya en `session-start.mjs`; falta doc/opt-in en install.
