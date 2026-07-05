@@ -1,0 +1,11 @@
+{
+  "_readme": "Copia este archivo a scope.json y lista SOLO hosts propios y autorizados por escrito. Sin scope.json, solo localhost y redes privadas están permitidas. El kernel inward-only prevalece siempre.",
+  "targets": [
+    "localhost",
+    "127.0.0.1",
+    "miapp.local",
+    "dev.miapp.internal"
+  ],
+  "authorized_by": "usuario",
+  "note": "solo mi propia app"
+}

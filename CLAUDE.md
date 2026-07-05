@@ -63,7 +63,7 @@ avisa a la 15ª) y `stop.mjs` (resetea en verde). Comando: `/debug-loop`. Detall
 | `ego-simbionte` | orquestar facetas (SAT) | detecta repo local |
 | `codebase-memory` | indexar/consultar el codebase | sí (C, build) |
 | `video-production` | crear vídeo/explainer | sí (ffmpeg/venv) |
-| `godot-rpg` | RPG 3D en Godot 4.6 | sí (Godot) |
+| `godot-rpg` | RPG 3D en Godot 4.x (4.3-stable mono instalado) | sí (Godot) |
 | `appsec-inward` | atacar+defender TU app | sí + scope propio |
 
 ## 7. Plataformas

@@ -20,8 +20,16 @@ Ancla de resumibilidad: si la sesión se agota, retoma desde aquí.
       + launchers `.claude/mcp-launchers/{ego,codebase-memory}.mjs` (resuelven venv/binario o piden
       `/ensure-engine`); comando `/ensure-engine`. Verificado: ego→no-op idempotente (exit 0), codebase-memory
       pesado→rechaza sin confirmación (exit 3), venv E: importa ego_memory/ego_simbionte/fastmcp/pysat/fastembed.
-- [ ] **F5 · Motores completos** — codebase-memory (C), video-production, godot-rpg, appsec-inward + stubs SEAL/SAT.
-- [ ] **F6 · pxpipe** — gating por modelo ya en `session-start.mjs`; falta doc/opt-in en install.
+- [x] **F5 · Motores completos** — 4 engine-skills reales cableadas a lo presente (SIN stubs): codebase-memory
+      (SKILL+_SOURCE; motor vía .mcp.json+launcher, binario prebuilt gated por /ensure-engine), video-production
+      (ffmpeg 8.1 presente), godot-rpg (Godot 4.3 mono + validador GDScript cascada real: gdlint→godot
+      --check-only→lint; probado OK/parse-error), appsec-inward (red+blue inward, invariante explícito, cableado
+      a agentes+ego-toolbelt+rule+hook). ensure.mjs con descriptores locate check-first para los 5 (ego/video/godot/
+      appsec exit0, cbm gate exit3). engagement/scope.json.example+README. SEAL/SAT: ego-self-edit/ego-simbionte
+      ya portadas (F3) + MCP vivo (F4); SEAL en E:\skill\ego\seal + E:\chimera\SEAL. Vía workflow (6 agentes, 0 err).
+- [x] **F6 · pxpipe** — gating por modelo en `session-start.mjs` (opt-in EGO_PXPIPE/state, OFF default, omite en
+      Opus, portOpen check-first); fix `listInstalledEngines` (nombres de sentinel reales); `docs/PXPIPE.md`;
+      opt-in expuesto en `install.ps1 -EnablePxpipe`. Verificado: fable arranca, Opus omite.
 - [ ] **F7 · Multiplataforma + entregable B** — install.ps1 completo, uninstall.ps1, dist/web, SETUP-PROMPT.md, PLATFORMS.md.
 
 ## Siguiente paso

@@ -13,14 +13,17 @@
 //
 // Los descriptores por motor viven en ENGINES. `ego` y `codebase-memory` están completos aquí (F4);
 // video-production / godot-rpg / appsec-inward añaden su descriptor en F5.
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, readdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import { homedir, platform } from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 
 const IS_WIN = platform() === 'win32';
 const ENGINES_DIR = join(homedir(), '.claude', 'engines-build');
+// Repo root = two levels up from .claude/ensure.mjs. Used by locate() for repo-relative checks.
+const REPO_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 function sentinelPath(name) { return join(ENGINES_DIR, `${name}.installed`); }
 function ensureDir(d) { if (!existsSync(d)) mkdirSync(d, { recursive: true }); }
 function sha256(s) { return createHash('sha256').update(String(s)).digest('hex').slice(0, 16); }
@@ -46,6 +49,24 @@ function onPath(exe) {
   const dirs = (process.env.PATH || '').split(IS_WIN ? ';' : ':');
   const hit = dirs.map((d) => join(d, exe)).find(existsSync);
   return hit || null;
+}
+// Find the first file matching a predicate under dir, bounded to `depth` levels (default 1).
+function findShallow(dir, pred, depth = 1) {
+  if (!existsSync(dir)) return null;
+  let ents;
+  try { ents = readdirSync(dir, { withFileTypes: true }); } catch { return null; }
+  for (const e of ents) {
+    const p = join(dir, e.name);
+    if (e.isFile() && pred(e.name)) return p;
+  }
+  if (depth <= 0) return null;
+  for (const e of ents) {
+    if (e.isDirectory()) {
+      const hit = findShallow(join(dir, e.name), pred, depth - 1);
+      if (hit) return hit;
+    }
+  }
+  return null;
 }
 
 // ─── Registro de motores ────────────────────────────────────────────────────
@@ -96,6 +117,65 @@ const ENGINES = {
       const ex = spawnSync('tar', ['-xf', zip, '-C', dir], { stdio: 'inherit' });
       if (ex.status !== 0) return { ok: false, detail: 'extracción falló (tar). Extrae ' + zip + ' manualmente.' };
       return { ok: true, detail: 'prebuilt v0.8.1 extraído en ' + dir };
+    },
+  },
+
+  // video-production: se apoya en ffmpeg/ffprobe. En esta máquina ya están (winget) → check-first no-op.
+  // Remotion/venv son opcionales; solo se marcan pesados si el usuario los pide explícitamente.
+  'video-production': {
+    heavy: false,
+    version: 'ffmpeg-8',
+    locate() {
+      const ff = process.env.FFMPEG_BIN || onPath(IS_WIN ? 'ffmpeg.exe' : 'ffmpeg');
+      return ff ? { ok: true, path: ff, detail: `ffmpeg: ${ff}` } : { ok: false, detail: 'ffmpeg no está en PATH' };
+    },
+    async install() {
+      return { ok: false, detail: 'ffmpeg falta. Instálalo (winget install Gyan.FFmpeg) o añádelo al PATH; ' +
+        'es una dependencia de sistema, no una descarga automática del SO.' };
+    },
+  },
+
+  // godot-rpg: localiza cualquier Godot instalado (Desktop/godot2 o PATH). Si falta, descargarlo es pesado.
+  'godot-rpg': {
+    heavy: true,
+    version: '4.x',
+    locate() {
+      // Prefer the windowed exe over the *_console.exe variant.
+      const isGodot = (n) => /^godot.*\.exe$/i.test(n) && !/console/i.test(n);
+      const cands = [
+        process.env.GODOT_BIN,
+        onPath(IS_WIN ? 'godot.exe' : 'godot'),
+        findShallow(join(homedir(), 'Desktop', 'godot2'), isGodot, 3),
+        findShallow('C:\\godot', isGodot, 3),
+      ].filter(Boolean);
+      const hit = cands.find(existsSync);
+      return hit ? { ok: true, path: hit, detail: `godot: ${hit}` } : { ok: false, detail: 'Godot no hallado (Desktop/godot2, PATH, GODOT_BIN)' };
+    },
+    async install() {
+      return { ok: false, detail: 'Godot falta. Descárgalo de godotengine.org (o define GODOT_BIN) — descarga grande, ' +
+        'confírmala tú; el SO no la hace por su cuenta.' };
+    },
+  },
+
+  // appsec-inward: no es un binario — está "presente" si el skill + agentes + rule inward existen en el repo.
+  // Los sec.mythos_* del gateway ego-toolbelt necesitan mythos-agent (diferido); se reporta con honestidad.
+  'appsec-inward': {
+    heavy: false,
+    version: '0.1.0',
+    locate() {
+      const need = [
+        join(REPO_ROOT, '.claude', 'rules', '00-security-inward.md'),
+        join(REPO_ROOT, '.claude', 'agents', 'appsec-red.md'),
+        join(REPO_ROOT, '.claude', 'agents', 'appsec-blue.md'),
+      ];
+      const missing = need.filter((p) => !existsSync(p));
+      if (missing.length) return { ok: false, detail: `faltan: ${missing.join(', ')}` };
+      const scope = existsSync(join(REPO_ROOT, 'engagement', 'scope.json'));
+      return { ok: true, detail: `red+blue inward listos${scope ? ' · scope.json presente' : ' · sin scope.json (solo local/privado)'}` };
+    },
+    async install() {
+      return { ok: false, detail: 'appsec-inward lo componen skill+agentes+rule del repo; para sec.mythos_* construye ' +
+        'mythos-agent (ego-toolbelt) aparte. No hay descarga automática.' };
     },
   },
 };
