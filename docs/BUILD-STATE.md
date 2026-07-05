@@ -30,11 +30,21 @@ Ancla de resumibilidad: si la sesión se agota, retoma desde aquí.
 - [x] **F6 · pxpipe** — gating por modelo en `session-start.mjs` (opt-in EGO_PXPIPE/state, OFF default, omite en
       Opus, portOpen check-first); fix `listInstalledEngines` (nombres de sentinel reales); `docs/PXPIPE.md`;
       opt-in expuesto en `install.ps1 -EnablePxpipe`. Verificado: fable arranca, Opus omite.
-- [ ] **F7 · Multiplataforma + entregable B** — install.ps1 completo, uninstall.ps1, dist/web, SETUP-PROMPT.md, PLATFORMS.md.
+- [x] **F7 · Multiplataforma + entregable B** — `install.ps1` (aditivo/idempotente/reversible: backup+merge,
+      NO clobbea; 56 ficheros; hooks net-new PostToolUse+Stop; MCP check-first; Desktop merge; dist/web export;
+      pxpipe opt-in; smoke test) y `uninstall.ps1` (manifest + strip hooks EGO por nombre sin tocar caveman +
+      quita bloque kernel + conserva engines-build). Docs: ARCHITECTURE, PLATFORMS, CHECK-FIRST,
+      CLAUDE.local.example, SETUP-PROMPT (entregable B, arranque en frío). **INSTALADO Y TESTEADO en la máquina
+      real**: smoke verde (session-start, gate externo→block, gate local→permite, ensure no-op); el gate
+      inward-only bloqueó un `nmap example.com` en la sesión viva (verificación end-to-end); uninstall -DryRun OK.
 
-## Siguiente paso
-F3: consolidar skills EGO desde `E:\skill\ego` (plugin real del usuario: 8 skills hermes, 3 MCP servers
-Python vivos, SEAL, venv SAT) + 6 agentes debate/appsec + comandos. Check-first: portar+cablear, no reescribir.
+## Estado: F0→F7 COMPLETO y verificado. EGO OS instalado y activo en ~/.claude (aditivo, reversible).
+
+## Único pendiente (opcional, gated)
+- **codebase-memory binario**: motor 100% cableado (skill+ensure+launcher+.mcp.json). Falta provisionar el
+  binario: `/ensure-engine codebase-memory --confirmed` descarga el prebuilt oficial (en la PowerShell del
+  usuario no se bloquea), o `--from-source` compila (necesita toolchain C, ausente). Requiere OK del usuario
+  sobre la fuente. NO bloquea nada: el launcher pide provisión cuando se invoque el MCP.
 
 ## Descubrimientos de la máquina (check-first, 2026-07-06)
 - Existe `E:\skill\ego\` = plugin EGO completo y funcionando (autor hugouchija44): `.venv` con pysat, MCP
