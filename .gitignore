@@ -51,3 +51,11 @@ SEAL/
 hermes-CCC/
 mythos-agent/
 persona/memoria/
+
+# --- EGO OS ---
+.claude/engines-build/
+.claude/state/
+.claude/settings.local.json
+CLAUDE.local.md
+dist/web/
+*.installed
