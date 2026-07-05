@@ -15,7 +15,11 @@ Ancla de resumibilidad: si la sesión se agota, retoma desde aquí.
       appsec-red/blue con invariante inward-only explícito y no-evasión del hook); 5 comandos (/ego-status,
       /ego-facet, /ego-debate→devil→angel→judge, /ego-remember, /ego-evolve). Vía workflow multi-agente (19
       agentes, tiering haiku/sonnet-5/fable-5), 0 errores.
-- [ ] **F4 · Harness comprobar-primero** — `ensure.mjs` estándar + sentinels + `.mcp.json` + `/ensure-engine`.
+- [x] **F4 · Harness comprobar-primero** — `.claude/ensure.mjs` (contrato: locate check-first → gate
+      `--confirmed` para pesados → sentinel con hash en `~/.claude/engines-build/`; idempotente); `.mcp.json`
+      + launchers `.claude/mcp-launchers/{ego,codebase-memory}.mjs` (resuelven venv/binario o piden
+      `/ensure-engine`); comando `/ensure-engine`. Verificado: ego→no-op idempotente (exit 0), codebase-memory
+      pesado→rechaza sin confirmación (exit 3), venv E: importa ego_memory/ego_simbionte/fastmcp/pysat/fastembed.
 - [ ] **F5 · Motores completos** — codebase-memory (C), video-production, godot-rpg, appsec-inward + stubs SEAL/SAT.
 - [ ] **F6 · pxpipe** — gating por modelo ya en `session-start.mjs`; falta doc/opt-in en install.
 - [ ] **F7 · Multiplataforma + entregable B** — install.ps1 completo, uninstall.ps1, dist/web, SETUP-PROMPT.md, PLATFORMS.md.
