@@ -30,8 +30,9 @@ maybeStartPxpipe(model).then((pxNote) => {
 });
 
 function listInstalledEngines() {
+  // Sentinel names must match those written by .claude/ensure.mjs (<engine>.installed).
   const dir = join(claudeHome(), 'engines-build');
-  const known = ['codebase-memory-mcp', 'godot', 'video-venv', 'symbiote'];
+  const known = ['ego', 'codebase-memory', 'video-production', 'godot-rpg', 'appsec-inward'];
   return known.filter((k) => existsSync(join(dir, `${k}.installed`)));
 }
 
