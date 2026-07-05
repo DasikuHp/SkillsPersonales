@@ -115,12 +115,12 @@ if (Test-Path $ensureSrc) {
 
 Head "Kernel CLAUDE.md (bloque gestionado en ~/.claude/CLAUDE.md)"
 $ccMd = Join-Path $CC 'CLAUDE.md'
-$kernel = Get-Content (Join-Path $Repo 'CLAUDE.md') -Raw
+$kernel = Get-Content (Join-Path $Repo 'CLAUDE.md') -Raw -Encoding UTF8
 $beg = '<!-- BEGIN EGO-OS KERNEL (managed by install.ps1) -->'
 $end = '<!-- END EGO-OS KERNEL -->'
 $block = "$beg`n$kernel`n$end"
 Backup-One $ccMd
-$cur = if (Test-Path $ccMd) { Get-Content $ccMd -Raw } else { '' }
+$cur = if (Test-Path $ccMd) { Get-Content $ccMd -Raw -Encoding UTF8 } else { '' }
 if ($cur -match [regex]::Escape($beg)) {
   $pattern = "(?s)" + [regex]::Escape($beg) + ".*?" + [regex]::Escape($end)
   $ev = [System.Text.RegularExpressions.MatchEvaluator]{ param($x) $block }
@@ -198,9 +198,9 @@ Head "Export web (dist/web para Project instructions de claude.ai)"
 $web = Join-Path $Repo 'dist\web'
 if (-not $DryRun) { New-Item -ItemType Directory -Force -Path $web | Out-Null }
 $bundle = "# EGO OS - Project instructions (proyeccion web)`n`n"
-$bundle += (Get-Content (Join-Path $Repo 'CLAUDE.md') -Raw) + "`n`n---`n`n"
+$bundle += (Get-Content (Join-Path $Repo 'CLAUDE.md') -Raw -Encoding UTF8) + "`n`n---`n`n"
 Get-ChildItem (Join-Path $Repo '.claude\rules') -Filter *.md | Sort-Object Name | ForEach-Object {
-  $bundle += "## rule: $($_.Name)`n`n" + (Get-Content $_.FullName -Raw) + "`n`n"
+  $bundle += "## rule: $($_.Name)`n`n" + (Get-Content $_.FullName -Raw -Encoding UTF8) + "`n`n"
 }
 if (-not $DryRun) { Set-Content -Path (Join-Path $web 'PROJECT-INSTRUCTIONS.md') -Value $bundle -Encoding UTF8 }
 Say "  + dist/web/PROJECT-INSTRUCTIONS.md (kernel + rules)" 'Green'
