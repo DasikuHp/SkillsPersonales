@@ -1,0 +1,53 @@
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+*.egg
+
+# Node
+node_modules/
+.npm/
+.yarn/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build & temp
+*.o
+*.so
+*.dylib
+.cache/
+
+# Local env
+.env
+.env.local
+
+# Large files
+*.pdf
+*.zip
+*.tar.gz
+
+# Session/temp
+.claude/projects/*/scratchpad/
+.claude/projects/*/temp/
+
+# Nested git repos (track separately if needed)
+Multi-Agents-Debate/
+RealMythos/
+SEAL/
+hermes-CCC/
+mythos-agent/
+persona/memoria/
