@@ -15,6 +15,10 @@ const PRIVATE_IP = /(^|[^\d.])(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.
 // Extract bare hostnames / URLs / IPs mentioned in a command string.
 const HOST_RE = /\b((?:https?:\/\/)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?::\d+)?|\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?)\b/gi;
 
+// A `name.ext` token that is really a FILENAME (not a host). Prevents false blocks on things like
+// `ensure.mjs`, `package.json`, `config.yaml`. Real attack targets use domains/IPs, not these.
+const FILE_EXT = /\.(mjs|cjs|js|jsx|ts|tsx|json|jsonc|md|mdx|py|pyc|rb|sh|bash|zsh|ps1|psm1|bat|cmd|exe|dll|so|dylib|a|o|c|h|hpp|hh|cpp|cc|cxx|rs|go|java|kt|kts|swift|php|pl|lua|r|scala|clj|ex|exs|erl|html?|css|scss|sass|less|ya?ml|toml|lock|log|ini|cfg|conf|env|txt|csv|tsv|xml|svg|gd|gdshader|tres|tscn|glb|gltf|png|jpe?g|gif|webp|ico|zip|tar|gz|tgz|bz2|xz|7z|rar|pdf|docx?|xlsx?|pptx?|sql|db|sqlite|bak|tmp|map|min|d\.ts)$/i;
+
 function loadScope(cwd) {
   // scope.json lives in the project's engagement/ dir; lists the user's own authorized hosts.
   const candidates = [
@@ -52,6 +56,9 @@ export function evaluate(command, cwd) {
   if (hosts.length === 0) return { block: false, reason: '' };
 
   for (const h of hosts) {
+    const bare = h.replace(/^https?:\/\//, '').split(':')[0];
+    // A URL scheme forces host-interpretation; otherwise a filename-looking token is not a target.
+    if (!/^https?:\/\//i.test(h) && FILE_EXT.test(bare)) continue;
     const isLocal = LOCAL_OK.test(h) || PRIVATE_IP.test(h);
     const inScope = hostInScope(h, scope);
     if (!isLocal && !inScope) {
