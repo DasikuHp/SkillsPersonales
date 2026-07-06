@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "ego-memory": {
+      "command": "node",
+      "args": [".claude/mcp-launchers/ego.mjs", "ego_memory"],
+      "env": {}
+    },
+    "ego-simbionte": {
+      "command": "node",
+      "args": [".claude/mcp-launchers/ego.mjs", "ego_simbionte"],
+      "env": {}
+    },
+    "ego-toolbelt": {
+      "command": "node",
+      "args": [".claude/mcp-launchers/ego.mjs", "ego_toolbelt"],
+      "env": {}
+    },
+    "codebase-memory": {
+      "command": "node",
+      "args": [".claude/mcp-launchers/codebase-memory.mjs"],
+      "env": {}
+    }
+  }
+}
