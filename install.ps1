@@ -191,7 +191,8 @@ else {
       } else { Say "  = Desktop MCP: $($m.n) (ya presente)" }
     }
   } else { Say "  ego venv ausente -> no se anaden MCP a Desktop." 'DarkYellow' }
-  if (-not $DryRun -and $added -gt 0) { $d | ConvertTo-Json -Depth 20 | Set-Content -Path $desktopCfg -Encoding UTF8 }
+  # Claude Desktop (Electron JSON.parse) rechaza BOM; PS5.1 -Encoding UTF8 lo escribe -> UTF-8 sin BOM
+  if (-not $DryRun -and $added -gt 0) { [System.IO.File]::WriteAllText($desktopCfg, ($d | ConvertTo-Json -Depth 20), (New-Object System.Text.UTF8Encoding($false))) }
 }
 
 Head "Export web (dist/web para Project instructions de claude.ai)"
