@@ -35,11 +35,19 @@
   no finge que el server arrancó) — señala `/ensure-engine codebase-memory`. Si encuentra el binario, lo
   ejecuta con el subcomando `mcp` (stdio JSON-RPC), tal como documenta el README upstream.
 - **Descriptor `ensure`** en `.claude/ensure.mjs` → entrada `'codebase-memory'`: `heavy: true`,
-  `version: 'v0.8.1'`. `locate()` comprueba los mismos candidatos que el launcher. `install()` sin
-  `--from-source` descarga el zip prebuilt oficial (`curl` + `tar`) a
-  `~/.claude/engines-build/codebase-memory/`; con `--from-source` no automatiza el build, remite al
-  toolchain C manual sobre el repo clonado. Al confirmar (`--confirmed`) y quedar operativo, escribe el
-  sentinel `~/.claude/engines-build/codebase-memory.installed` (hash de versión) — segunda pasada = no-op.
+  `version: 'v0.8.1'`. `locate()` comprueba los mismos candidatos que el launcher. **Corrección de
+  seguridad (post-F5):** `install()` **ya no descarga el zip prebuilt de `DeusData/codebase-memory-mcp`
+  por defecto** — ese org nunca fue verificado explícitamente por el usuario, y auto-descargar un binario
+  de terceros para ejecutarlo como servidor MCP es un riesgo de cadena de suministro que el SO no debe
+  asumir en silencio. El único camino soportado ahora es **`--from-source`**: localiza el repo clonado de
+  `dasikuhp/codebase-memory-mcp` (vía `CBM_SRC`, convención de hermano de directorio, o
+  `~/.claude/engines-build/codebase-memory-src`), corre `scripts/build.sh` con `bash` (Git Bash/WSL en
+  Windows — el build system es bash+Makefile, no se reimplementó en PowerShell) y copia el binario
+  resultante a `~/.claude/engines-build/codebase-memory/`. Validado end-to-end en sandbox Linux: build
+  real (~2m30s, ~257MB, `codebase-memory-mcp 0.8.1` responde a `--version`), sentinel escrito, segunda
+  pasada no-op. **Pendiente en la máquina Windows real:** requiere un compilador C/C++ (gcc/clang, p.ej.
+  vía MSYS2/mingw-w64) que hoy no está instalado ahí — sin él, `--from-source` falla con un mensaje claro
+  en vez de fingir éxito.
 - **Comando** `.claude/commands/ensure-engine.md` invoca este contrato por nombre (`/ensure-engine
   codebase-memory [--confirmed] [--from-source]`), respetando el gate de confirmación para lo pesado.
 - **Estado real en esta máquina (comprobado, no asumido):** `~/.claude/engines-build/codebase-memory/` no

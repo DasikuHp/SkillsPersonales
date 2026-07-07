@@ -13,7 +13,7 @@
 //
 // Los descriptores por motor viven en ENGINES. `ego` y `codebase-memory` están completos aquí (F4);
 // video-production / godot-rpg / appsec-inward añaden su descriptor en F5.
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, readdirSync, chmodSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { homedir, platform } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -100,23 +100,52 @@ const ENGINES = {
       const hit = cand.find(existsSync);
       return hit ? { ok: true, path: hit, detail: `binario: ${hit}` } : { ok: false, detail: `binario ausente en ${dir} y PATH` };
     },
+    // Dónde puede estar el CÓDIGO FUENTE de dasikuhp/codebase-memory-mcp ya clonado. No se clona solo
+    // (comprobar-primero + no-red por defecto): apunta CBM_SRC, o clónalo junto a este repo / en engines-build.
+    locateSource() {
+      const roots = [
+        process.env.CBM_SRC,
+        join(dirname(REPO_ROOT), 'codebase-memory-mcp'), // convención: clonado como hermano de este repo
+        join(ENGINES_DIR, 'codebase-memory-src'),
+      ].filter(Boolean);
+      return roots.find((r) => existsSync(join(r, 'scripts', 'build.sh'))) || null;
+    },
     async install({ fromSource }) {
       const dir = join(ENGINES_DIR, 'codebase-memory');
       ensureDir(dir);
-      if (fromSource) {
-        return { ok: false, detail: 'Build desde fuente: requiere toolchain C (gcc/clang) + scripts/build.sh del repo ' +
-          'DasikuHp/codebase-memory-mcp. Ejecútalo manualmente y coloca el binario en ' + dir + ' (ver F5).' };
+      if (!fromSource) {
+        return { ok: false, detail:
+          'No hay descarga de binario prebuilt automática (la fuente previa apuntaba a un org no verificado por ' +
+          'el usuario — riesgo de cadena de suministro). Usa --from-source: compila dasikuhp/codebase-memory-mcp, ' +
+          'la fuente que ya tienes auditada en tu propio scope.' };
       }
-      // Prebuilt oficial (Windows amd64). Descarga con curl (presente en Windows 10+), extrae con tar/Expand-Archive.
-      const url = 'https://github.com/DeusData/codebase-memory-mcp/releases/download/v0.8.1/codebase-memory-mcp-windows-amd64.zip';
-      const zip = join(dir, 'cbm.zip');
-      log(`descargando ${url}`);
-      const dl = spawnSync('curl', ['-sL', '-o', zip, url], { stdio: 'inherit' });
-      if (dl.status !== 0 || !existsSync(zip)) return { ok: false, detail: 'descarga falló (curl). Revisa red o usa --from-source.' };
-      log('extrayendo');
-      const ex = spawnSync('tar', ['-xf', zip, '-C', dir], { stdio: 'inherit' });
-      if (ex.status !== 0) return { ok: false, detail: 'extracción falló (tar). Extrae ' + zip + ' manualmente.' };
-      return { ok: true, detail: 'prebuilt v0.8.1 extraído en ' + dir };
+      const src = this.locateSource();
+      if (!src) {
+        return { ok: false, detail:
+          `Fuente no hallada. Clona dasikuhp/codebase-memory-mcp junto a este repo (como hermano: ` +
+          `${join(dirname(REPO_ROOT), 'codebase-memory-mcp')}) o define CBM_SRC apuntando a tu checkout, y reintenta.` };
+      }
+      // El build system es bash+Makefile (scripts/build.sh); en Windows requiere Git Bash o WSL — no hay
+      // versión PowerShell nativa (no la reinventamos: usa la que ya trae Git for Windows).
+      const bash = onPath(IS_WIN ? 'bash.exe' : 'bash');
+      if (!bash) {
+        return { ok: false, detail:
+          'bash no está en PATH. El build de codebase-memory-mcp es bash+Makefile (scripts/build.sh); en Windows ' +
+          'usa el bash que trae "Git for Windows" (suele quedar en PATH como bash.exe) o WSL, y reintenta.' };
+      }
+      log(`compilando desde ${src} (esto tarda; produce un binario grande, ~250MB)`);
+      const build = spawnSync(bash, ['scripts/build.sh', '--version', this.version], { cwd: src, stdio: 'inherit' });
+      if (build.status !== 0) return { ok: false, detail: 'scripts/build.sh falló (ver salida arriba). Revisa que haya un compilador C/C++ (gcc/g++ o clang) en PATH.' };
+      const outDir = join(src, 'build', 'c');
+      const outCandidates = [join(outDir, 'codebase-memory-mcp.exe'), join(outDir, 'codebase-memory-mcp')];
+      const out = outCandidates.find(existsSync);
+      if (!out) return { ok: false, detail: `build.sh terminó pero no encontré el binario en ${outDir}.` };
+      const dstName = IS_WIN ? 'codebase-memory-mcp.exe' : 'codebase-memory-mcp';
+      const dst = join(dir, dstName);
+      // Copia manual (sin cp -p) para no depender de utilidades POSIX ausentes en PowerShell puro.
+      writeFileSync(dst, readFileSync(out));
+      try { chmodSync(dst, 0o755); } catch {}
+      return { ok: true, detail: `compilado y copiado a ${dst}` };
     },
   },
 

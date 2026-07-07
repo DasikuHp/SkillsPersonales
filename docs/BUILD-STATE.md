@@ -40,11 +40,29 @@ Ancla de resumibilidad: si la sesión se agota, retoma desde aquí.
 
 ## Estado: F0→F7 COMPLETO y verificado. EGO OS instalado y activo en ~/.claude (aditivo, reversible).
 
-## Único pendiente (opcional, gated)
-- **codebase-memory binario**: motor 100% cableado (skill+ensure+launcher+.mcp.json). Falta provisionar el
-  binario: `/ensure-engine codebase-memory --confirmed` descarga el prebuilt oficial (en la PowerShell del
-  usuario no se bloquea), o `--from-source` compila (necesita toolchain C, ausente). Requiere OK del usuario
-  sobre la fuente. NO bloquea nada: el launcher pide provisión cuando se invoque el MCP.
+## Corrección post-F5 (auditoría de seguridad, 2026-07-06)
+Al revisar el repo de nuevo se detectó que `ensure.mjs` descargaba por defecto un binario prebuilt desde
+`DeusData/codebase-memory-mcp` — un org que el usuario nunca verificó explícitamente. Aunque el `LICENSE`
+del fork `dasikuhp/codebase-memory-mcp` sí confirma a DeusData como copyright holder legítimo del upstream,
+auto-descargar y vendorizar un binario de terceros para correrlo como servidor MCP es un riesgo de cadena
+de suministro que el SO no debe asumir en silencio (bloqueado por el clasificador de seguridad del propio
+harness). Decisión del usuario: **compilar desde `dasikuhp/codebase-memory-mcp`** (la fuente ya auditada,
+en su propio scope) en vez de confiar en el binario de un tercero.
+
+`ensure.mjs` se corrigió: `install()` ya no descarga nada por defecto; `--from-source` ahora SÍ compila de
+verdad (localiza el repo fuente vía `CBM_SRC`/convención de hermano/`engines-build/codebase-memory-src`,
+corre `scripts/build.sh` con `bash`, copia el binario resultante). **Validado end-to-end en sandbox Linux**:
+build real (~2m30s, ~257MB — 158 grammars tree-sitter + vectores nomic embebidos), `codebase-memory-mcp
+0.8.1` responde a `--version`, sentinel escrito, segunda pasada no-op, launcher MCP lo encuentra y ejecuta.
+El binario compilado **no se vendorizó en git** (GitHub rechaza archivos >100MB; y sería un ELF Linux,
+inútil en el Windows del usuario de todos modos).
+
+## Único pendiente (real, no bloqueante)
+- **codebase-memory binario en la máquina Windows real**: el motor está 100% cableado y el build real ya
+  se validó en Linux. Falta que la propia máquina Windows tenga un compilador C/C++ (gcc/clang, p.ej. vía
+  MSYS2/mingw-w64) y `bash` en PATH (Git Bash ya trae uno) para que `/ensure-engine codebase-memory
+  --confirmed --from-source` compile ahí. Sin eso, `ensure.mjs` falla con un mensaje claro (no finge éxito).
+  NO bloquea el resto del SO: el launcher solo pide provisión cuando se invoca el MCP `codebase-memory`.
 
 ## Descubrimientos de la máquina (check-first, 2026-07-06)
 - Existe `E:\skill\ego\` = plugin EGO completo y funcionando (autor hugouchija44): `.venv` con pysat, MCP
